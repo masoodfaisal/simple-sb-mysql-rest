@@ -24,16 +24,14 @@ def noProxyHosts
 
 def LOCATION = "https://github.com/masoodfaisal/simple-sb-mysql-rest.git"
 
-node() {
+node('maven') {
 
 
     stage('Checkout'){
 
             sh '''
                 #git config --global http.sslVerify false
-                rm -rf simple-sb-mysql-rest || true
-                git clone -b master --single-branch https://github.com/masoodfaisal/simple-sb-mysql-rest.git
-                cd simple-sb-mysql-rest
+                git clone -b master --single-branch \$LOCATION .
                '''
 
     }
@@ -41,7 +39,7 @@ node() {
 
     stage("Populate variables") {
 
-		appVersion = getVersionFromPom("simple-sb-mysql-rest/pom.xml")
+		appVersion = getVersionFromPom("pom.xml")
 
         // Remove -SNAPSHOT from app version if any
         int indexSnapshot = appVersion.indexOf("-SNAPSHOT")
@@ -60,7 +58,7 @@ node() {
 
 
         // Keep only alphanumeric characters in app name
-        appNameRaw = getArtifactIdFromPom("simple-sb-mysql-rest/pom.xml")
+        appNameRaw = getArtifactIdFromPom("pom.xml")
 		//appNameRaw = readFile('appname.txt').trim()
         appName = appNameRaw.replaceAll("[^A-Za-z0-9]", "")
 
@@ -68,14 +66,13 @@ node() {
        	println "[appMajorVersion] ${appMajorVersion}"
 
     	// retrieve GIT_COMMIT ID
-    	gitCommitId = sh(returnStdout: true, script: 'cd simple-sb-mysql-rest; git rev-parse HEAD').trim()
+    	gitCommitId = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 
     }
 
     stage('Build Fat jar'){
         sh """
                 #export MAVEN_OPTS=''
-                cd simple-sb-mysql-rest
                 mvn -T5  clean package -DskipTests
             """
     }
@@ -84,7 +81,6 @@ node() {
     stage('Run Unit Test'){
 
         sh """
-                cd simple-sb-mysql-rest
                 mvn test
             """
 
@@ -115,7 +111,6 @@ node() {
 
     stage('Start s2i container build'){
         sh """
-                cd simple-sb-mysql-rest
                 oc project ${namespaceDev}
                 BUILD_STATUS=\$(oc get buildconfig ${appName}${appMajorVersion} -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${BUILD_STATUS} != ${appName}${appMajorVersion} ]]; then
@@ -127,7 +122,6 @@ node() {
            """
 
         sh """
-                cd simple-sb-mysql-rest
                 oc project ${namespaceDev}
                 oc start-build ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=./target/${appNameRaw}-${appVersion}.jar --follow
            """
@@ -137,7 +131,6 @@ node() {
 
     stage('Deploy configmaps to DEV namespace'){
         sh """
-                cd simple-sb-mysql-rest
                 oc project ${namespaceDev}
                 CONFIG_MAP_STATUS=\$(oc get configmap ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${CONFIG_MAP_STATUS} != ${appName}${appMajorVersion} ]]; then
@@ -154,7 +147,6 @@ node() {
     stage('Deploy application to DEV namespace'){
 
         sh """
-                cd simple-sb-mysql-rest
                 oc project ${namespaceDev}
                 DEPLOY_STATUS=\$(oc get deploymentconfig ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${DEPLOY_STATUS} != ${appName}${appMajorVersion} ]]; then
@@ -184,7 +176,6 @@ node() {
 
     stage('Expose deployed Service as Route'){
         sh """
-                cd simple-sb-mysql-rest
                 oc project ${namespaceDev}
                 ROUTE_STATUS=\$(oc get route ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${ROUTE_STATUS} != ${appName}${appMajorVersion} ]]; then
