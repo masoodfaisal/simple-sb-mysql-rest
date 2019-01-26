@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: app-springboot-buildconfig
+metadata:
+  annotations:
+    description: A simple build config for spring boot based applications
+    iconClass: icon-jboss
+    tags: java,springboot,dev
+    version: "2.0"
+  name: app-springboot-buildconfig
+objects:    
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: dev
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_MAJOR_VERSION}
+      appname: ${APP_NAME}
+      appversion: ${APP_VERSION}
+      buildnumber: ${JENKINS_BUILD_NUMBER}
+      gitcommitid: ${GIT_COMMIT_ID}
+    name: ${APP_NAME}${APP_MAJOR_VERSION}
+    namespace: ${APP_NAMESPACE}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${APP_NAME}
+      group: dev
+      project: ${APP_NAME}
+      provider: s2i
+      version: ${APP_MAJOR_VERSION}
+      appname: ${APP_NAME}
+      appversion: ${APP_VERSION}
+      buildnumber: ${JENKINS_BUILD_NUMBER}
+      gitcommitid: ${GIT_COMMIT_ID}
+    name: ${APP_NAME}${APP_MAJOR_VERSION}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}${APP_MAJOR_VERSION}:${IMAGE_TAG}
+      imageLabels:
+      - name: component
+        value: ${APP_NAME}
+      - name: group
+        value: dev
+      - name: project
+        value: ${APP_NAME}
+      - name: version
+        value: ${APP_MAJOR_VERSION}
+      - name: appname
+        value: ${APP_NAME}
+      - name: appversion
+        value: ${APP_VERSION}
+      - name: buildnumber
+        value: ${JENKINS_BUILD_NUMBER}
+      - name: gitcommitid
+        value: ${GIT_COMMIT_ID}
+#      pushSecret:
+#        name: '${PUSH_SECRET}'
+    resources: {}
+    source:
+      binary:
+      type: "Binary"
+    strategy:
+      sourceStrategy:
+        env:
+        - name: BUILD_LOGLEVEL
+          value: "8"
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}${APP_MAJOR_VERSION}
+#        pullSecret:
+#          name: '${PUSH_SECRET}'
+        incremental: false
+      type: Source
+parameters:
+- description: The name assigned to the application.
+  displayName: Application Name
+  name: APP_NAME
+  required: true
+- name: APP_MAJOR_VERSION
+  displayName: Application Major Version
+  description: The application major version from the pom version tag e.g. 1 for 1.0.0-SNAPSHOT.
+- name: IMAGE_STREAM_NAMESPACE
+  displayName: Image Stream Namespace
+  description: Namespace in which the Fuse ImageStreams are installed. These ImageStreams
+    are normally installed in the openshift namespace. You should only need to modify
+    this if you've installed the ImageStreams in a different namespace/project.
+  required: false
+  value: openshift
+- name: GIT_COMMIT_ID
+  displayName: GIT Commit ID
+  description: GIT Commit ID from Jenkins
+  required: true
+- name: JENKINS_BUILD_NUMBER
+  displayName: Jenkins Build Number
+  description: Jenkins Build Number
+  required: true
+- name: APP_VERSION
+  displayName: RAW app version
+  description: RAW app version e.g. 1.0.0-SNAPSHOT
+  required: true
+- name: IMAGE_TAG
+  displayName: raw app version for dev env, uat for uat and prod for prod
+  description: raw app version for dev env, uat for uat and prod for prod
+  required: true
