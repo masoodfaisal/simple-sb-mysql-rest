@@ -216,3 +216,18 @@ def getReleaseFromMetaData(pom) {
     matcher ? matcher[0][1] : null
 }
 
+
+
+#docker run  mysql/mysql-server -p 3306:3306
+#docker exec -it mysql1 mysql -uroot -p
+#ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+mysql -uroot -p
+2) Create user
+
+CREATE USER 'user'@'%' IDENTIFIED BY 'password';
+3) Grant permissions
+
+ GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;
+4) Flush priviledges
+
+FLUSH PRIVILEGES;
