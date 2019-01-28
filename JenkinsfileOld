@@ -225,9 +225,12 @@ mysql -uroot -p
 2) Create user
 
 CREATE USER 'user'@'%' IDENTIFIED BY 'password';
+
 3) Grant permissions
 
  GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;
 4) Flush priviledges
-
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';
 FLUSH PRIVILEGES;
+
+

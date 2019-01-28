@@ -76,7 +76,7 @@ node() {
         sh """
                 #export MAVEN_OPTS=''
                 cd simple-sb-mysql-rest
-                mvn -T5  clean package -DskipTests
+                /usr/local/src/apache-maven/bin/mvn -T5  clean package -DskipTests
             """
     }
 
@@ -85,7 +85,7 @@ node() {
 
         sh """
                 cd simple-sb-mysql-rest
-                mvn test
+                /usr/local/src/apache-maven/bin/mvn test
             """
 
     }
