@@ -120,7 +120,7 @@ objects:
                 - name: JAVA_MAX_MEM_RATIO
                   value: '75'
                 - name: JAVA_OPTIONS
-                  value: '-javaagent:/opt/appdynamics/javaagent.jar -Djava.security.egd=file:/dev/./urandom -XX:+PrintFlagsFinal -XX:+PrintGCDetails -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
+                  value: '-Djava.security.egd=file:/dev/./urandom -XX:+PrintFlagsFinal -XX:+PrintGCDetails -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
               livenessProbe:
                 httpGet:
                   path: /health
