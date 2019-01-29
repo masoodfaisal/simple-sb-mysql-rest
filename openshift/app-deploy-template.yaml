@@ -216,7 +216,7 @@ parameters:
   - name: EXTERNAL_NAMESPACE
     displayName: External namespace
     description: External namespace
-    required: true
+    required: false
 
 labels:
   template: app-springboot-deploy
