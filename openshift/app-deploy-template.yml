@@ -14,9 +14,9 @@ objects:
     metadata:
       name: ${APP_NAME}${APP_MAJOR_VERSION}
       annotations:
-        prometheus.io/path: /prometheus
+        prometheus.io/path: /actuator/prometheus
         prometheus.io/scrape: 'true'
-        prometheus.io/port: '9090'
+        prometheus.io/port: '8080'
       labels:
         component: ${APP_NAME}
         group: dev
@@ -123,7 +123,7 @@ objects:
                   value: '-Djava.security.egd=file:/dev/./urandom -XX:+PrintFlagsFinal -XX:+PrintGCDetails -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
               livenessProbe:
                 httpGet:
-                  path: /health
+                  path: /actuator/health
                   port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 100
@@ -133,7 +133,7 @@ objects:
                 failureThreshold: 15
               readinessProbe:
                 httpGet:
-                  path: /health
+                  path: /actuator/health
                   port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 100
