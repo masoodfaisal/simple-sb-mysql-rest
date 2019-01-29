@@ -32,9 +32,6 @@ objects:
         - name: '${APP_NAME}${APP_MAJOR_VERSION}-http'
           port: 8080
           targetPort: 8080
-        - name: '${APP_NAME}${APP_MAJOR_VERSION}-prometheus-http'
-          port: 9090
-          targetPort: 9090
       selector:
         component: '${APP_NAME}'
         deploymentconfig: '${APP_NAME}${APP_MAJOR_VERSION}'
@@ -127,7 +124,7 @@ objects:
               livenessProbe:
                 httpGet:
                   path: /health
-                  port: 9090
+                  port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 100
                 timeoutSeconds: 1
@@ -137,7 +134,7 @@ objects:
               readinessProbe:
                 httpGet:
                   path: /health
-                  port: 9090
+                  port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 100
                 timeoutSeconds: 1
