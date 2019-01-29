@@ -68,6 +68,12 @@ node() {
        	println "[appMajorVersion] ${appMajorVersion}"
 
     	// retrieve GIT_COMMIT ID
+    	    	sh """
+    	        pwd
+    	        cd simple-sb-mysql-rest
+    	        pwd
+            """
+
     	gitCommitId = sh(returnStdout: true, script: 'cd simple-sb-mysql-rest; git rev-parse HEAD').trim()
 
     }
@@ -116,20 +122,21 @@ node() {
     stage('Start s2i container build'){
         sh """
                 cd simple-sb-mysql-rest
-                oc project ${namespaceDev}
-                BUILD_STATUS=\$(oc get buildconfig ${appName}${appMajorVersion} -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
+                /var/lib/jenkins/oc login https://master-lb.ocp.devops.pd.ntt.hk --insecure-skip-tls-verify=true --token='eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJqZW5raW5zIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImplbmtpbnMtdG9rZW4tYmpmNjgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiamVua2lucyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImRlYzk4ZjQ2LTFlMjQtMTFlOS04ZmIxLTAwNTA1NmIwMDNiMiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpqZW5raW5zOmplbmtpbnMifQ.S_q2NXwUNAI7b1Pm7RtkBMWwLinnYMdw0OA2r9DrxHVBCj2_YnrVrFGXMiSZF-L9R9ywbCJXidPfx2IQNDnGdFB7K4AxviL7qFg16xijE1DgV9BuCQjLXIeAHukoyEPtMPGRozkRZkegIpKooJ35GalQEHIdtNiP_alTrLzq7TtW09lz52_ZKEIqVh7Hsa0urLFwOIa7PXkUNb1aW7MGWQ1DHLXX82Q54XdYY1HfUxni5dC3CqMaWeohJ4hyHA-zsieHYlJIqnBon1hHBga5TZbMaNdlF8nR69fGm7pxto3m6QgPtfdi4WcPCQHdC8HmWYkYNzMx3-Z9POhHerfnIg'
+                /var/lib/jenkins/oc project ${namespaceDev}
+                BUILD_STATUS=\$(/var/lib/jenkins/oc  get buildconfig ${appName}${appMajorVersion} -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${BUILD_STATUS} != ${appName}${appMajorVersion} ]]; then
                     echo "Build does not exist. Creating BuildConfig/IS."
-                    oc process -f ./openshift/app-build-template.yml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p APP_VERSION=${appVersion} -p IMAGE_TAG=${appVersion}  | oc create -n ${namespaceDev} -f -
+                    /var/lib/jenkins/oc process -f ./openshift/app-build-template.yml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p APP_VERSION=${appVersion} -p IMAGE_TAG=${appVersion}   | /var/lib/jenkins/oc  create -n ${namespaceDev} -f -
                 else
-					oc process -f ./openshift/app-build-template.yml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p APP_VERSION=${appVersion} -p IMAGE_TAG=${appVersion}  | oc replace -n ${namespaceDev} -f -
+					/var/lib/jenkins/oc  process -f ./openshift/app-build-template.yml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p APP_VERSION=${appVersion} -p IMAGE_TAG=${appVersion}  | /var/lib/jenkins/oc  replace -n ${namespaceDev} -f -
                 fi
            """
 
         sh """
                 cd simple-sb-mysql-rest
-                oc project ${namespaceDev}
-                oc start-build ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=./target/${appNameRaw}-${appVersion}.jar --follow
+                /var/lib/jenkins/oc  project ${namespaceDev}
+                /var/lib/jenkins/oc  start-build ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=./target/${appNameRaw}-${appVersion}.jar --follow
            """
 
     }
@@ -138,16 +145,16 @@ node() {
     stage('Deploy configmaps to DEV namespace'){
         sh """
                 cd simple-sb-mysql-rest
-                oc project ${namespaceDev}
-                CONFIG_MAP_STATUS=\$(oc get configmap ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
+                /var/lib/jenkins/oc  project ${namespaceDev}
+                CONFIG_MAP_STATUS=\$(/var/lib/jenkins/oc  get configmap ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${CONFIG_MAP_STATUS} != ${appName}${appMajorVersion} ]]; then
                     echo "ConfigMap doesnot exists . Creating ConfigMap"
-                    oc create configmap ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=configuration/${envFolder}/application.properties
+                    /var/lib/jenkins/oc  create configmap ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=configuration/${envFolder}/application.properties
                 else
-                    oc create configmap ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=configuration/${envFolder}/application.properties --dry-run -o yaml | oc replace configmap  ${appName}${appMajorVersion} -n ${namespaceDev} -f -
+                    /var/lib/jenkins/oc  create configmap ${appName}${appMajorVersion} -n ${namespaceDev} --from-file=configuration/${envFolder}/application.properties --dry-run -o yaml | /var/lib/jenkins/oc  replace configmap  ${appName}${appMajorVersion} -n ${namespaceDev} -f -
                 fi
 
-                oc label --overwrite=true configmap ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
+                /var/lib/jenkins/oc  label --overwrite=true configmap ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
            """
     }
 
@@ -155,28 +162,28 @@ node() {
 
         sh """
                 cd simple-sb-mysql-rest
-                oc project ${namespaceDev}
-                DEPLOY_STATUS=\$(oc get deploymentconfig ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
+                /var/lib/jenkins/oc  project ${namespaceDev}
+                DEPLOY_STATUS=\$(/var/lib/jenkins/oc  get deploymentconfig ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${DEPLOY_STATUS} != ${appName}${appMajorVersion} ]]; then
                     echo "Deployment doesnot exists already. Creating DeploymentConfig/Svc/Route"
-                    oc process -f ${workspace}/ocp-objects/deploy-template.yaml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p APP_VERSION=${appVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p MEM_LIMIT=900Mi -p MEM_REQUEST=900Mi -p CPU_LIMIT=900m -p CPU_REQUEST=250m -p NAMESPACE=${namespaceDev} -p NUMBER_OF_REPLICAS=1 -p IMAGE_TAG=${appVersion}  -p REGISTRY_LOCATION=${registryLocation} -p EXTERNAL_NAMESPACE=${externalNamespace} -p PULL_SECRET=${pushPullSecret} -p NON_PROXY_HOST=${noProxyHosts} | oc create -n ${namespaceDev} -f -
+                    /var/lib/jenkins/oc  process -f ./openshift/app-deploy-template.yml -n ${namespaceDev} -p EXTERNAL_NAMESPACE=${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p APP_VERSION=${appVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p MEM_LIMIT=900Mi -p MEM_REQUEST=900Mi -p CPU_LIMIT=900m -p CPU_REQUEST=10m -p NAMESPACE=${namespaceDev} -p NUMBER_OF_REPLICAS=1 -p IMAGE_TAG=${appVersion}   | /var/lib/jenkins/oc  create -n ${namespaceDev} -f -
                     sleep 5
                 else
-                	oc process -f ${workspace}/ocp-objects/deploy-template.yaml -n ${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p APP_VERSION=${appVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p MEM_LIMIT=900Mi -p MEM_REQUEST=900Mi -p CPU_LIMIT=900m -p CPU_REQUEST=250m -p NAMESPACE=${namespaceDev} -p NUMBER_OF_REPLICAS=1 -p IMAGE_TAG=${appVersion}  -p REGISTRY_LOCATION=${registryLocation} -p EXTERNAL_NAMESPACE=${externalNamespace} -p PULL_SECRET=${pushPullSecret} -p NON_PROXY_HOST=${noProxyHosts} | oc apply -n ${namespaceDev} --force=true -f -
+                	/var/lib/jenkins/oc  process -f ./openshift/app-deploy-template.yml -n ${namespaceDev} -p EXTERNAL_NAMESPACE=${namespaceDev} -p APP_NAME=${appName} -p APP_MAJOR_VERSION=${appMajorVersion} -p APP_VERSION=${appVersion} -p GIT_COMMIT_ID=${gitCommitId} -p JENKINS_BUILD_NUMBER=${BUILD_NUMBER} -p MEM_LIMIT=900Mi -p MEM_REQUEST=900Mi -p CPU_LIMIT=900m -p CPU_REQUEST=10m -p NAMESPACE=${namespaceDev} -p NUMBER_OF_REPLICAS=1 -p IMAGE_TAG=${appVersion}   | /var/lib/jenkins/oc  apply -n ${namespaceDev} --force=true -f -
                 fi
 
     			#Autoscale
-    			HPA_STATUS=\$(oc get hpa ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
+    			HPA_STATUS=\$(/var/lib/jenkins/oc  get hpa ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${HPA_STATUS} != ${appName}${appMajorVersion} ]]; then
                 	echo "Horizontal pod autoscaler does not exist yet. Creating one..."
-                	oc autoscale dc/${appName}${appMajorVersion} -n ${namespaceDev} --min 1 --max 5 --cpu-percent=60
+                	/var/lib/jenkins/oc  autoscale dc/${appName}${appMajorVersion} -n ${namespaceDev} --min 1 --max 1 --cpu-percent=60
                 else
                 	echo "Horizontal pod autoscaler already exists. Updating labels..."
            		fi
-           		oc label --overwrite=true hpa ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
+           		/var/lib/jenkins/oc  label --overwrite=true hpa ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
 
                 #deploy the docker image
-           		oc rollout status dc/${appName}${appMajorVersion} -n ${namespaceDev}
+           		/var/lib/jenkins/oc  rollout status dc/${appName}${appMajorVersion} -n ${namespaceDev}
            """
 
 
@@ -185,14 +192,14 @@ node() {
     stage('Expose deployed Service as Route'){
         sh """
                 cd simple-sb-mysql-rest
-                oc project ${namespaceDev}
-                ROUTE_STATUS=\$(oc get route ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
+                /var/lib/jenkins/oc  project ${namespaceDev}
+                ROUTE_STATUS=\$(/var/lib/jenkins/oc  get route ${appName}${appMajorVersion}  -n ${namespaceDev} | awk '{if(NR>1) print \$1}')
                 if [[ \${ROUTE_STATUS} != ${appName}${appMajorVersion} ]]; then
                     echo "Route not found. First deploy"
                     #oc expose svc ${appName}${appMajorVersion} --name=${appName}${appMajorVersion} --path=${apiURL}/v${appMajorVersion} -n ${namespaceDev}
-                    oc create route edge ${appName}${appMajorVersion} --service=${appName}${appMajorVersion}  --port=8080 --path=${apiURL}/v${appMajorVersion} -n ${namespaceDev}
+                    /var/lib/jenkins/oc  create route edge ${appName}${appMajorVersion} --service=${appName}${appMajorVersion}  --port=8080 -n ${namespaceDev}
                 fi
-                oc label --overwrite=true route ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
+                /var/lib/jenkins/oc  label --overwrite=true route ${appName}${appMajorVersion} -n ${namespaceDev} component=${appName} group=app-group project=${appName} provider=s2i version=${appMajorVersion} appname=${appName} appversion=${appVersion} buildnumber=${BUILD_NUMBER} gitcommitid=${gitCommitId}
            """
 
     }
