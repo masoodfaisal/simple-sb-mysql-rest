@@ -55,7 +55,7 @@ objects:
         gitcommitid: ${GIT_COMMIT_ID}
       name: '${APP_NAME}${APP_MAJOR_VERSION}'
     spec:
-      replicas: ${NUMBER_OF_REPLICAS}
+      replicas: ${{NUMBER_OF_REPLICAS}}
       selector:
         component: '${APP_NAME}'
         deploymentconfig: '${APP_NAME}${APP_MAJOR_VERSION}'
@@ -168,7 +168,7 @@ parameters:
   - name: CPU_REQUEST
     displayName: CPU request
     description: The amount of CPU to requests.
-    value: 400m
+    value: 10m
     required: true
   - name: CPU_LIMIT
     displayName: CPU limit
