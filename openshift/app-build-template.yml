@@ -75,7 +75,7 @@ objects:
           value: "8"
         from:
           kind: ImageStreamTag
-          name: ${APP_NAME}${APP_MAJOR_VERSION}
+          name: ${APP_NAME}${APP_MAJOR_VERSION}:${IMAGE_TAG}
 #        pullSecret:
 #          name: '${PUSH_SECRET}'
         incremental: false
