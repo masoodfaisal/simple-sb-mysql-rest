@@ -25,7 +25,6 @@ objects:
       buildnumber: ${JENKINS_BUILD_NUMBER}
       gitcommitid: ${GIT_COMMIT_ID}
     name: ${APP_NAME}${APP_MAJOR_VERSION}
-    namespace: ${APP_NAMESPACE}
 - apiVersion: v1
   kind: BuildConfig
   metadata:
