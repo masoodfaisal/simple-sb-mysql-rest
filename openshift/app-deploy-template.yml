@@ -98,7 +98,7 @@ objects:
                 defaultMode: 420
           containers:
             - name: '${APP_NAME}${APP_MAJOR_VERSION}'
-              image: '${APP_NAME}${APP_MAJOR_VERSION}:${IMAGE_TAG}'
+              image: 'docker-registry.default.svc:5000/${EXTERNAL_NAMESPACE}/${APP_NAME}${APP_MAJOR_VERSION}:${IMAGE_TAG}'
               ports:
                 - containerPort: 8080
                   name: http
